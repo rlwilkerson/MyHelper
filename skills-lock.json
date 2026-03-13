@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "dotnet-minimal-apis": {
+      "source": "wshaddix/dotnet-skills",
+      "sourceType": "github",
+      "computedHash": "b13f7a590d6e4dbca7062e23c617fd0cc202d09ab0d02f0b2846a1aeea5b1d6f"
+    }
+  }
+}

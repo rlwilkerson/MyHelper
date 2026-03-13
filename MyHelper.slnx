@@ -1,9 +1,12 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".github/copilot-instructions.md" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/MyHelper.App/MyHelper.App.csproj" />
+    <Project Path="src/MyHelper.AppHost/MyHelper.AppHost.csproj" Id="d3e93e9f-b6a4-4d27-8b66-409873559485" />
     <Project Path="src/MyHelper.Core/MyHelper.Core.csproj" />
+    <Project Path="src/MyHelper.ServiceDefaults/MyHelper.ServiceDefaults.csproj" />
     <Project Path="src/MyHelper.Tools/MyHelper.Tools.csproj" />
   </Folder>
-  <Project Path="src/MyHelper.AppHost/MyHelper.AppHost.csproj" Id="d3e93e9f-b6a4-4d27-8b66-409873559485" />
-  <Project Path="src/MyHelper.ServiceDefaults/MyHelper.ServiceDefaults.csproj" />
 </Solution>

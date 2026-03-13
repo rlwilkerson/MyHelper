@@ -49,7 +49,7 @@
   function appendUserMessage(text) {
     const msg = document.createElement('div');
     msg.className = 'msg msg-user';
-    msg.innerHTML = `<div class="msg-content">${escapeHtml(text)}</div>`;
+    msg.innerHTML = `<div class="msg-content">${renderMarkdown(text)}</div>`;
     clearWelcome();
     feed.appendChild(msg);
     scrollToBottom();
@@ -74,8 +74,7 @@
 
   function finalizeAssistantMessage() {
     if (currentAssistantEl) {
-      // Render simple markdown code fences
-      renderCodeBlocks(currentAssistantEl);
+      currentAssistantEl.innerHTML = renderMarkdown(currentAssistantEl.textContent || '');
       currentAssistantEl = null;
     }
   }
@@ -106,14 +105,35 @@
     if (w) w.remove();
   }
 
-  // Very lightweight code-fence renderer (```lang ... ```)
-  function renderCodeBlocks(el) {
-    const text = el.textContent;
-    if (!text.includes('```')) return;
-    el.innerHTML = escapeHtml(text).replace(
-      /```(?:\w+)?\n([\s\S]*?)```/g,
-      (_, code) => `<pre><code>${code.trim()}</code></pre>`
-    );
+  function renderMarkdown(text) {
+    if (!text) return '';
+
+    if (!window.marked || !window.DOMPurify) {
+      return escapeHtml(text);
+    }
+
+    marked.setOptions({
+      gfm: true,
+      breaks: true,
+    });
+
+    const html = marked.parse(text);
+    const sanitized = DOMPurify.sanitize(html, {
+      ADD_TAGS: ['input'],
+      ADD_ATTR: ['type', 'checked', 'disabled'],
+    });
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = sanitized;
+    enforceExternalLinkPolicy(wrapper);
+    return wrapper.innerHTML;
+  }
+
+  function enforceExternalLinkPolicy(root) {
+    root.querySelectorAll('a[href]').forEach(link => {
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener noreferrer');
+    });
   }
 
   function escapeHtml(str) {

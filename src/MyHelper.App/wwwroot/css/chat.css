@@ -302,6 +302,14 @@ body::before {
   animation: msg-in 150ms ease both;
 }
 
+.msg::before {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
 @keyframes msg-in {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -310,33 +318,45 @@ body::before {
 /* User turn — right-aligned accent stripe */
 .msg-user {
   align-self: flex-end;
-  max-width: 70%;
+  max-width: 62%;
   border-left: 2px solid var(--accent-dim);
   padding-left: 0.75rem;
   text-align: right;
 }
 
+.msg-user::before {
+  content: "You";
+  color: var(--accent);
+}
+
 .msg-user .msg-content {
   font-family: var(--mono);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
+  line-height: 1.45;
 }
 
-/* Assistant turn — full width, serif body */
+/* Assistant turn — full width, roomier mono body */
 .msg-assistant {
   align-self: stretch;
   max-width: 100%;
+  padding: 0.15rem 0;
+}
+
+.msg-assistant::before {
+  content: "Assistant";
+  color: var(--text-muted);
 }
 
 .msg-assistant .msg-content {
-  font-family: var(--serif);
-  font-size: 0.95rem;
+  font-family: var(--mono);
+  font-size: 0.87rem;
   color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
-  line-height: 1.75;
+  line-height: 1.72;
 }
 
 /* Code blocks inside assistant messages */

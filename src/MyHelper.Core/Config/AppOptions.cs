@@ -22,6 +22,9 @@ public sealed class AppOptions
     /// <summary>Shell commands the ShellCommandTool is permitted to run.
     /// When empty the allow-list is disabled and all commands are allowed.</summary>
     public string[] ShellCommandAllowList { get; set; } = [];
+
+    /// <summary>SQLite-backed long-term memory settings.</summary>
+    public MemoryOptions Memory { get; set; } = new();
 }
 
 public sealed class McpServerOptions
@@ -36,4 +39,19 @@ public sealed class McpServerOptions
     public string? Command { get; set; }
     public string[]? Args { get; set; }
     public Dictionary<string, string>? Env { get; set; }
+}
+
+public sealed class MemoryOptions
+{
+    /// <summary>SQLite database file path. Relative paths resolve under LocalApplicationData\MyHelper.</summary>
+    public string DatabasePath { get; set; } = "memory.db";
+
+    /// <summary>When true, prompt/response exchanges may be auto-captured as memories.</summary>
+    public bool AutoCaptureEnabled { get; set; } = true;
+
+    /// <summary>Minimum confidence required for auto-capture.</summary>
+    public double AutoCaptureThreshold { get; set; } = 0.92;
+
+    /// <summary>Maximum number of memories returned from search/list operations.</summary>
+    public int MaxSearchResults { get; set; } = 50;
 }

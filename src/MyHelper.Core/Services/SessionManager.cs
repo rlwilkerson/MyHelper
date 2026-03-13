@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Text;
 using System.Threading.Channels;
 using GitHub.Copilot.SDK;
 using Microsoft.Extensions.Logging;
@@ -15,17 +16,20 @@ public sealed class SessionManager : ISessionManager, IAsyncDisposable
     private readonly CopilotClientService _clientService;
     private readonly IToolRegistry _toolRegistry;
     private readonly AppOptions _options;
+    private readonly IMemoryService _memoryService;
     private readonly ILogger<SessionManager> _logger;
     private readonly ConcurrentDictionary<string, SessionEntry> _sessions = new();
 
     public SessionManager(
         CopilotClientService clientService,
         IToolRegistry toolRegistry,
+        IMemoryService memoryService,
         IOptions<AppOptions> options,
         ILogger<SessionManager> logger)
     {
         _clientService = clientService;
         _toolRegistry = toolRegistry;
+        _memoryService = memoryService;
         _options = options.Value;
         _logger = logger;
     }
@@ -105,6 +109,7 @@ public sealed class SessionManager : ISessionManager, IAsyncDisposable
             SingleWriter = true,
             AllowSynchronousContinuations = false,
         });
+        var assistantBuffer = new StringBuilder();
 
         var consumer = Task.Run(async () =>
         {
@@ -116,7 +121,11 @@ public sealed class SessionManager : ISessionManager, IAsyncDisposable
         {
             var chatEvent = MapEvent(sessionId, evt);
             if (chatEvent is not null)
+            {
+                if (chatEvent.Type == ChatEventType.MessageDelta && !string.IsNullOrEmpty(chatEvent.Payload))
+                    assistantBuffer.Append(chatEvent.Payload);
                 channel.Writer.TryWrite(chatEvent);
+            }
         });
 
         try
@@ -125,6 +134,22 @@ public sealed class SessionManager : ISessionManager, IAsyncDisposable
                 new MessageOptions { Prompt = prompt },
                 timeout: null,
                 cancellationToken: ct);
+
+            try
+            {
+                await _memoryService.AutoCaptureAsync(
+                    sessionId,
+                    prompt,
+                    assistantBuffer.ToString(),
+                    ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Auto-capture memory failed for session {SessionId}",
+                    sessionId);
+            }
         }
         finally
         {

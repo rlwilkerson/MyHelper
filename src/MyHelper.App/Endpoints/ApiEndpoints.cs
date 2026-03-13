@@ -16,6 +16,7 @@ public static class ApiEndpoints
         api.MapModelEndpoints();
         api.MapToolEndpoints();
         api.MapMcpServerEndpoints();
+        api.MapMemoryEndpoints();
         api.MapHealthEndpoints();
 
         return app;
@@ -96,6 +97,67 @@ public static class ApiEndpoints
                 .ToArray();
 
             return TypedResults.Ok((object)new { servers });
+        });
+
+        return api;
+    }
+
+    private static RouteGroupBuilder MapMemoryEndpoints(this RouteGroupBuilder api)
+    {
+        var memories = api.MapGroup("/memories");
+
+        memories.MapPost("/", async Task<Results<Ok<object>, BadRequest<object>>> (CreateMemoryRequestDto request, IMemoryService memoryService, CancellationToken ct) =>
+        {
+            if (string.IsNullOrWhiteSpace(request.Text))
+                return TypedResults.BadRequest((object)new { error = "Memory text is required." });
+
+            var saved = await memoryService.RememberAsync(request, ct);
+            return TypedResults.Ok((object)saved);
+        });
+
+        memories.MapGet("/", async Task<Ok<object>> (
+            string? query,
+            string? type,
+            int? limit,
+            IMemoryService memoryService,
+            CancellationToken ct) =>
+        {
+            var items = await memoryService.SearchAsync(query, type, limit, ct);
+            return TypedResults.Ok((object)new { items, count = items.Count });
+        });
+
+        memories.MapPatch("/{id}", async Task<Results<Ok<object>, NotFound, BadRequest<object>, Conflict<object>>> (
+            string id,
+            UpdateMemoryRequestDto request,
+            IMemoryService memoryService,
+            CancellationToken ct) =>
+        {
+            try
+            {
+                var updated = await memoryService.UpdateAsync(id, request, ct);
+                return updated is null
+                    ? TypedResults.NotFound()
+                    : TypedResults.Ok((object)updated);
+            }
+            catch (ArgumentException ex)
+            {
+                return TypedResults.BadRequest((object)new { error = ex.Message });
+            }
+            catch (MemoryConflictException ex)
+            {
+                return TypedResults.Conflict((object)new { error = ex.Message });
+            }
+        });
+
+        memories.MapDelete("/{id}", async Task<Results<NoContent, NotFound>> (
+            string id,
+            IMemoryService memoryService,
+            CancellationToken ct) =>
+        {
+            var archived = await memoryService.ArchiveAsync(id, ct);
+            return archived
+                ? TypedResults.NoContent()
+                : TypedResults.NotFound();
         });
 
         return api;

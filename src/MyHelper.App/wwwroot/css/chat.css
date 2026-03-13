@@ -219,6 +219,84 @@ body::before {
   accent-color: var(--accent);
 }
 
+/* Skills list */
+.skills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skills-empty {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.skill-item {
+  width: 100%;
+  text-align: left;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.45rem 0.5rem;
+  cursor: pointer;
+  color: var(--text);
+  font-family: var(--mono);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.skill-item:hover {
+  border-color: var(--accent);
+}
+
+.skill-item.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.skill-name {
+  font-size: 0.72rem;
+}
+
+.skill-desc {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.skill-invoke {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.skill-extra-input {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 0.35rem 0.45rem;
+}
+
+.btn-clear-skill {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.btn-clear-skill:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 /* Sidebar footer */
 .sidebar-footer {
   padding: 0.75rem 1rem;

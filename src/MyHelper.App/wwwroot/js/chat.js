@@ -8,6 +8,8 @@
   let currentAssistantEl = null;
   let activeToolCallId = null;
   let isProcessing = false;
+  let selectedSkillId = null;
+  let selectedSkillName = null;
 
   // ── DOM refs ───────────────────────────────────────────────────
   const feed          = document.getElementById('message-feed');
@@ -21,6 +23,9 @@
   const statusBadge   = document.getElementById('connection-status');
   const sessionBadge  = document.getElementById('active-session-badge');
   const mcpList       = document.getElementById('mcp-list');
+  const skillsList    = document.getElementById('skills-list');
+  const clearSkillBtn = document.getElementById('clear-skill-btn');
+  const skillExtraInput = document.getElementById('skill-extra-input');
 
   // ── Utilities ──────────────────────────────────────────────────
   function setStatus(state, text) {
@@ -98,6 +103,52 @@
     clearWelcome();
     feed.appendChild(el);
     scrollToBottom();
+  }
+
+  function renderSkills(skills) {
+    skillsList.innerHTML = '';
+    selectedSkillId = null;
+    selectedSkillName = null;
+
+    if (!skills || skills.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'skills-empty';
+      empty.textContent = 'No skills configured';
+      skillsList.appendChild(empty);
+      return;
+    }
+
+    skills.forEach(s => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'skill-item';
+      button.dataset.skillId = s.id;
+      button.innerHTML = `
+        <span class="skill-name">${escapeHtml(s.displayName)}</span>
+        <span class="skill-desc">${escapeHtml(s.description)}</span>`;
+      button.addEventListener('click', () => {
+        selectedSkillId = s.id;
+        selectedSkillName = s.displayName;
+        skillsList.querySelectorAll('.skill-item').forEach(el => {
+          el.classList.toggle('active', el.dataset.skillId === s.id);
+        });
+      });
+      skillsList.appendChild(button);
+    });
+  }
+
+  async function fetchSkills() {
+    try {
+      const res = await fetch('/api/skills');
+      if (!res.ok) {
+        renderSkills([]);
+        return;
+      }
+      const data = await res.json();
+      renderSkills(data.skills || []);
+    } catch {
+      renderSkills([]);
+    }
   }
 
   function clearWelcome() {
@@ -310,18 +361,48 @@
 
   // ── Send ───────────────────────────────────────────────────────
   async function sendMessage() {
-    const text = input.value.trim();
-    if (!text || !activeSessionId || isProcessing) return;
+    const rawText = input.value.trim();
+    if (!rawText || !activeSessionId || isProcessing) return;
+    setProcessing(true);
+
+    let promptToSend = rawText;
+    let displayText = rawText;
+
+    if (selectedSkillId) {
+      try {
+        const composedInput = skillExtraInput.value.trim()
+          ? `${rawText}\n\nFocus: ${skillExtraInput.value.trim()}`
+          : rawText;
+
+        const invokeRes = await fetch('/api/skills/invoke', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ skillId: selectedSkillId, input: composedInput }),
+        });
+
+        if (!invokeRes.ok) {
+          const errPayload = await invokeRes.json().catch(() => ({}));
+          throw new Error(errPayload.error || 'Failed to invoke skill');
+        }
+
+        const payload = await invokeRes.json();
+        promptToSend = payload.prompt;
+        displayText = `[skill: ${selectedSkillName || payload.displayName || selectedSkillId}] ${rawText}`;
+      } catch (err) {
+        appendError('Skill invocation failed: ' + err.message);
+        setProcessing(false);
+        return;
+      }
+    }
 
     input.value = '';
     input.style.height = 'auto';
 
-    appendUserMessage(text);
+    appendUserMessage(displayText);
     startAssistantMessage();
-    setProcessing(true);
 
     try {
-      await connection.invoke('SendMessage', activeSessionId, text);
+      await connection.invoke('SendMessage', activeSessionId, promptToSend);
     } catch (err) {
       finalizeAssistantMessage();
       appendError('Send failed: ' + err.message);
@@ -337,6 +418,12 @@
   });
 
   newSessionBtn.addEventListener('click', createSession);
+  clearSkillBtn.addEventListener('click', () => {
+    selectedSkillId = null;
+    selectedSkillName = null;
+    skillExtraInput.value = '';
+    skillsList.querySelectorAll('.skill-item').forEach(el => el.classList.remove('active'));
+  });
 
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -354,6 +441,6 @@
 
   buildConnection();
   startConnection().then(async () => {
-    await Promise.all([fetchModels(), fetchMcpServers()]);
+    await Promise.all([fetchModels(), fetchMcpServers(), fetchSkills()]);
   });
 })();

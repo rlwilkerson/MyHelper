@@ -98,3 +98,5 @@ static void EnsureCopilotCliAvailable(ILogger logger, AppOptions options)
     }
 }
 
+public partial class Program;
+

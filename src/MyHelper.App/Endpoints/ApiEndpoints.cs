@@ -17,6 +17,7 @@ public static class ApiEndpoints
         api.MapToolEndpoints();
         api.MapMcpServerEndpoints();
         api.MapMemoryEndpoints();
+        api.MapSkillEndpoints();
         api.MapHealthEndpoints();
 
         return app;
@@ -158,6 +159,38 @@ public static class ApiEndpoints
             return archived
                 ? TypedResults.NoContent()
                 : TypedResults.NotFound();
+        });
+
+        return api;
+    }
+
+    private static RouteGroupBuilder MapSkillEndpoints(this RouteGroupBuilder api)
+    {
+        var skills = api.MapGroup("/skills");
+
+        skills.MapGet("/", Ok<object> (ISkillsCatalogService skillService) =>
+        {
+            var items = skillService.ListSkills();
+            return TypedResults.Ok((object)new { skills = items });
+        });
+
+        skills.MapPost("/invoke", Results<Ok<object>, NotFound<object>, BadRequest<object>> (
+            BuildSkillPromptRequestDto request,
+            ISkillsCatalogService skillService) =>
+        {
+            try
+            {
+                var payload = skillService.BuildInvocationPrompt(request.SkillId, request.Input);
+                return TypedResults.Ok((object)payload);
+            }
+            catch (SkillValidationException ex)
+            {
+                return TypedResults.BadRequest((object)new { error = ex.Message });
+            }
+            catch (SkillNotFoundException ex)
+            {
+                return TypedResults.NotFound((object)new { error = ex.Message });
+            }
         });
 
         return api;

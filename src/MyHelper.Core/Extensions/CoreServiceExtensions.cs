@@ -21,6 +21,7 @@ public static class CoreServiceExtensions
         services.AddSingleton<IToolRegistry, ToolRegistry>();
         services.AddSingleton<ISessionManager, SessionManager>();
         services.AddSingleton<IMemoryService, MemoryService>();
+        services.AddSingleton<ISkillsCatalogService, SkillsCatalogService>();
 
         return services;
     }

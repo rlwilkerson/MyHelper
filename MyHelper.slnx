@@ -9,4 +9,8 @@
     <Project Path="src/MyHelper.ServiceDefaults/MyHelper.ServiceDefaults.csproj" />
     <Project Path="src/MyHelper.Tools/MyHelper.Tools.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MyHelper.App.Tests/MyHelper.App.Tests.csproj" />
+    <Project Path="tests/MyHelper.Core.Tests/MyHelper.Core.Tests.csproj" />
+  </Folder>
 </Solution>

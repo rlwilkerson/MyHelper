@@ -25,6 +25,9 @@ public sealed class AppOptions
 
     /// <summary>SQLite-backed long-term memory settings.</summary>
     public MemoryOptions Memory { get; set; } = new();
+
+    /// <summary>Configured MCP-backed skills available to users.</summary>
+    public SkillsCatalogOptions Skills { get; set; } = new();
 }
 
 public sealed class McpServerOptions
@@ -54,4 +57,28 @@ public sealed class MemoryOptions
 
     /// <summary>Maximum number of memories returned from search/list operations.</summary>
     public int MaxSearchResults { get; set; } = 50;
+}
+
+public sealed class SkillsCatalogOptions
+{
+    /// <summary>Enable skills API/UI behavior.</summary>
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>Catalog of skills keyed by skill id.</summary>
+    public Dictionary<string, SkillOptions> Catalog { get; set; } = [];
+}
+
+public sealed class SkillOptions
+{
+    /// <summary>Friendly display name shown in UI.</summary>
+    public string DisplayName { get; set; } = "";
+
+    /// <summary>Short description shown in UI.</summary>
+    public string Description { get; set; } = "";
+
+    /// <summary>Prompt template. Must contain {input} placeholder.</summary>
+    public string PromptTemplate { get; set; } = "{input}";
+
+    /// <summary>MCP server names the skill expects.</summary>
+    public string[] McpServers { get; set; } = [];
 }

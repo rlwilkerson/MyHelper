@@ -49,6 +49,9 @@ public sealed class SessionManager : ISessionManager, IAsyncDisposable
 
         var session = await _clientService.Client.CreateSessionAsync(config, ct);
         var entry = new SessionEntry(session, model, DateTimeOffset.UtcNow);
+
+        if (_sessions.TryGetValue(session.SessionId, out var previous))
+            await previous.Session.DisposeAsync();
         _sessions[session.SessionId] = entry;
 
         _logger.LogInformation("Session created: {SessionId} model={Model}", session.SessionId, model);
@@ -66,6 +69,9 @@ public sealed class SessionManager : ISessionManager, IAsyncDisposable
 
         var session = await _clientService.Client.ResumeSessionAsync(sessionId, resumeConfig, ct);
         var entry = new SessionEntry(session, _options.DefaultModel, DateTimeOffset.UtcNow);
+
+        if (_sessions.TryGetValue(session.SessionId, out var previous))
+            await previous.Session.DisposeAsync();
         _sessions[session.SessionId] = entry;
 
         _logger.LogInformation("Session resumed: {SessionId}", session.SessionId);

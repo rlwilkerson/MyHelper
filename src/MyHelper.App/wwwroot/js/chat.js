@@ -133,7 +133,7 @@
     li.className = 'session-item';
     li.dataset.sessionId = sessionId;
     li.innerHTML = `
-      <span class="session-id" title="${sessionId}">${sessionId.slice(0, 8)}…</span>
+      <span class="session-id" title="${escapeHtml(sessionId)}">${escapeHtml(sessionId.slice(0, 8))}…</span>
       <span class="session-model">${escapeHtml(model || '—')}</span>`;
     li.addEventListener('click', () => activateSession(sessionId));
     sessionList.appendChild(li);

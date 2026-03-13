@@ -15,11 +15,15 @@ public static class DirectoryListTool
 
             try
             {
+                const int MaxEntries = 500;
                 var option = recursive
                     ? SearchOption.AllDirectories
                     : SearchOption.TopDirectoryOnly;
 
-                var entries = Directory.GetFileSystemEntries(path, "*", option);
+                var allEntries = Directory.GetFileSystemEntries(path, "*", option);
+                var truncated = allEntries.Length > MaxEntries;
+                var entries = truncated ? allEntries.Take(MaxEntries).ToArray() : allEntries;
+
                 var sb = new StringBuilder();
 
                 foreach (var entry in entries.OrderBy(e => e))
@@ -28,6 +32,9 @@ public static class DirectoryListTool
                     var isDir = Directory.Exists(entry);
                     sb.AppendLine(isDir ? $"[DIR]  {relative}" : $"[FILE] {relative}");
                 }
+
+                if (truncated)
+                    sb.AppendLine($"\n(truncated — showing {MaxEntries} of {allEntries.Length} entries)");
 
                 return sb.Length > 0 ? sb.ToString() : "(empty directory)";
             }

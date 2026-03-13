@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using Microsoft.Extensions.Options;
 using MyHelper.App.Hubs;
+using MyHelper.Core.Config;
 using MyHelper.Core.Extensions;
 using MyHelper.Core.Models;
 using MyHelper.Core.Services;
@@ -22,7 +24,8 @@ app.Services.RegisterAllTools();
 using (var scope = app.Services.CreateScope())
 {
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    EnsureCopilotCliAvailable(logger);
+    var opts = scope.ServiceProvider.GetRequiredService<IOptions<AppOptions>>().Value;
+    EnsureCopilotCliAvailable(logger, opts);
 }
 
 // ── Middleware ─────────────────────────────────────────────────────────────
@@ -82,8 +85,15 @@ app.MapGet("/api/health", (CopilotClientService copilot) =>
 app.Run();
 
 // ── Helpers ────────────────────────────────────────────────────────────────
-static void EnsureCopilotCliAvailable(ILogger logger)
+static void EnsureCopilotCliAvailable(ILogger logger, AppOptions options)
 {
+    // If pointing to an external CLI server, local CLI is not required.
+    if (!string.IsNullOrWhiteSpace(options.CliUrl))
+    {
+        logger.LogInformation("CliUrl is configured — skipping local copilot CLI check.");
+        return;
+    }
+
     try
     {
         var psi = new ProcessStartInfo
@@ -95,14 +105,29 @@ static void EnsureCopilotCliAvailable(ILogger logger)
             UseShellExecute = false,
             CreateNoWindow = true,
         };
+
         using var process = Process.Start(psi);
-        process?.WaitForExit(3000);
-        if (process?.ExitCode != 0)
-            throw new InvalidOperationException("copilot CLI returned non-zero exit code.");
+        if (process is null || !process.WaitForExit(3000))
+        {
+            process?.Kill();
+            logger.LogWarning(
+                "copilot CLI check timed out. " +
+                "Ensure GitHub Copilot CLI is installed: gh extension install github/gh-copilot");
+            return;
+        }
+
+        if (process.ExitCode != 0)
+        {
+            logger.LogWarning(
+                "copilot CLI returned exit code {Code}. " +
+                "Ensure you are authenticated: gh auth login", process.ExitCode);
+            return;
+        }
+
         logger.LogInformation("GitHub Copilot CLI found: {Version}",
             process.StandardOutput.ReadToEnd().Trim());
     }
-    catch (Exception ex) when (ex is not InvalidOperationException)
+    catch (Exception ex)
     {
         logger.LogWarning(
             "GitHub Copilot CLI not found on PATH. " +

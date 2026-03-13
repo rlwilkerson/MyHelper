@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Options;
+using MyHelper.App.Endpoints;
 using MyHelper.App.Hubs;
 using MyHelper.Core.Config;
 using MyHelper.Core.Extensions;
-using MyHelper.Core.Models;
 using MyHelper.Core.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,49 +42,7 @@ app.UseRouting();
 // ── Endpoints ─────────────────────────────────────────────────────────────
 app.MapHub<ChatHub>("/hubs/chat");
 app.MapRazorPages();
-
-// Sessions
-app.MapPost("/api/sessions", async (CreateSessionDto dto, ISessionManager sessions, CancellationToken ct) =>
-{
-    var sessionId = await sessions.CreateSessionAsync(dto, ct);
-    return Results.Ok(new { sessionId });
-});
-
-app.MapPost("/api/sessions/{id}/resume", async (string id, ISessionManager sessions, CancellationToken ct) =>
-{
-    var sessionId = await sessions.ResumeSessionAsync(id, ct);
-    return Results.Ok(new { sessionId });
-});
-
-app.MapDelete("/api/sessions/{id}", async (string id, ISessionManager sessions, CancellationToken ct) =>
-{
-    await sessions.DeleteSessionAsync(id, ct);
-    return Results.NoContent();
-});
-
-app.MapGet("/api/sessions", (ISessionManager sessions) =>
-    Results.Ok(sessions.GetActiveSessions()));
-
-// Models
-app.MapGet("/api/models", async (CopilotClientService copilot, CancellationToken ct) =>
-{
-    var modelList = await copilot.Client.ListModelsAsync(ct);
-    var models = modelList.Select(m => new { m.Id, m.Name }).ToArray();
-    return Results.Ok(new { models });
-});
-
-// Tools
-app.MapGet("/api/tools", (IToolRegistry registry) =>
-{
-    var tools = registry.GetAll()
-        .Select(t => new { name = t.Name, description = t.Description })
-        .ToArray();
-    return Results.Ok(tools);
-});
-
-// Health
-app.MapGet("/api/health", (CopilotClientService copilot) =>
-    Results.Ok(new { status = "ok", timestamp = DateTimeOffset.UtcNow }));
+app.MapApiEndpoints();
 
 app.Run();
 

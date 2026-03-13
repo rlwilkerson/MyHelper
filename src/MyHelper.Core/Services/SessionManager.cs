@@ -38,6 +38,7 @@ public sealed class SessionManager : ISessionManager, IAsyncDisposable
             SessionId = dto.SessionId,
             Model = model,
             Streaming = true,
+            OnPermissionRequest = PermissionHandler.ApproveAll,
             SystemMessage = new SystemMessageConfig
             {
                 Content = dto.SystemMessage ?? _options.SystemMessage,
@@ -64,6 +65,7 @@ public sealed class SessionManager : ISessionManager, IAsyncDisposable
         {
             Model = _options.DefaultModel,
             Streaming = true,
+            OnPermissionRequest = PermissionHandler.ApproveAll,
             Tools = _toolRegistry.GetAll().ToList(),
         };
 

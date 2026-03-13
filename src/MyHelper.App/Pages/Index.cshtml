@@ -1,0 +1,71 @@
+@page
+@model MyHelper.App.Pages.IndexModel
+@{
+    ViewData["Title"] = "MyHelper";
+}
+
+<div class="shell">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-logo">⬡</span>
+            <span class="sidebar-brand">MyHelper</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-section-label">Model</div>
+            <select id="model-select" class="model-select" title="Select model">
+                <option value="">Loading…</option>
+            </select>
+
+            <div class="sidebar-section-label" style="margin-top:1.5rem">Sessions</div>
+            <button id="new-session-btn" class="btn-new-session">+ New session</button>
+            <ul id="session-list" class="session-list">
+                @foreach (var s in Model.ActiveSessions)
+                {
+                    <li class="session-item" data-session-id="@s.SessionId">
+                        <span class="session-id" title="@s.SessionId">@s.SessionId[..Math.Min(8, s.SessionId.Length)]…</span>
+                        <span class="session-model">@(s.Model ?? "—")</span>
+                    </li>
+                }
+            </ul>
+
+            <div class="sidebar-section-label" style="margin-top:1.5rem">MCP Servers</div>
+            <div id="mcp-list" class="mcp-list">
+                <!-- populated from /api/tools -->
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <span id="connection-status" class="conn-badge conn-connecting">●&nbsp;connecting</span>
+        </div>
+    </aside>
+
+    <!-- Main chat column -->
+    <main class="chat-column">
+        <header class="chat-header">
+            <span id="active-session-badge" class="session-badge">no session</span>
+            <button id="abort-btn" class="btn-abort" title="Abort current response" disabled>✕ abort</button>
+        </header>
+
+        <section id="message-feed" class="message-feed" aria-live="polite">
+            <div class="welcome-msg">
+                <p>Start a session to begin.</p>
+            </div>
+        </section>
+
+        <footer class="composer">
+            <div class="composer-inner">
+                <textarea
+                    id="composer-input"
+                    class="composer-textarea"
+                    placeholder="Ask anything…"
+                    rows="1"
+                    disabled></textarea>
+                <button id="send-btn" class="btn-send" disabled>
+                    <span id="send-label">send</span>
+                </button>
+            </div>
+        </footer>
+    </main>
+</div>

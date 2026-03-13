@@ -20,6 +20,7 @@
   const newSessionBtn = document.getElementById('new-session-btn');
   const statusBadge   = document.getElementById('connection-status');
   const sessionBadge  = document.getElementById('active-session-badge');
+  const mcpList       = document.getElementById('mcp-list');
 
   // ── Utilities ──────────────────────────────────────────────────
   function setStatus(state, text) {
@@ -189,6 +190,43 @@
     }
   }
 
+  function renderMcpServers(servers) {
+    mcpList.innerHTML = '';
+
+    if (!servers || servers.length === 0) {
+      const item = document.createElement('div');
+      item.className = 'mcp-item';
+      item.textContent = 'No MCP servers configured';
+      mcpList.appendChild(item);
+      return;
+    }
+
+    servers.forEach(s => {
+      const item = document.createElement('label');
+      item.className = 'mcp-item';
+      const checked = s.enabledByDefault ? 'checked' : '';
+      item.innerHTML = `
+        <input type="checkbox" disabled ${checked} />
+        <span>${escapeHtml(s.name)} (${escapeHtml(s.type || 'unknown')})</span>`;
+      mcpList.appendChild(item);
+    });
+  }
+
+  async function fetchMcpServers() {
+    try {
+      const res = await fetch('/api/mcp-servers');
+      if (!res.ok) {
+        renderMcpServers([]);
+        return;
+      }
+
+      const data = await res.json();
+      renderMcpServers(data.servers || []);
+    } catch {
+      renderMcpServers([]);
+    }
+  }
+
   // ── SignalR ────────────────────────────────────────────────────
   function buildConnection() {
     connection = new signalR.HubConnectionBuilder()
@@ -295,5 +333,7 @@
   });
 
   buildConnection();
-  startConnection().then(fetchModels);
+  startConnection().then(async () => {
+    await Promise.all([fetchModels(), fetchMcpServers()]);
+  });
 })();

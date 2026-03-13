@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.Extensions.Options;
+using MyHelper.Core.Config;
 using MyHelper.Core.Models;
 using MyHelper.Core.Services;
 
@@ -13,6 +15,7 @@ public static class ApiEndpoints
         api.MapSessionEndpoints();
         api.MapModelEndpoints();
         api.MapToolEndpoints();
+        api.MapMcpServerEndpoints();
         api.MapHealthEndpoints();
 
         return app;
@@ -75,6 +78,25 @@ public static class ApiEndpoints
     {
         api.MapGet("/health", Ok<object> (CopilotClientService _) =>
             TypedResults.Ok((object)new { status = "ok", timestamp = DateTimeOffset.UtcNow }));
+
+        return api;
+    }
+
+    private static RouteGroupBuilder MapMcpServerEndpoints(this RouteGroupBuilder api)
+    {
+        api.MapGet("/mcp-servers", Ok<object> (IOptions<AppOptions> options) =>
+        {
+            var servers = options.Value.McpServers
+                .Select(s => new
+                {
+                    name = s.Key,
+                    type = s.Value.Type,
+                    enabledByDefault = true,
+                })
+                .ToArray();
+
+            return TypedResults.Ok((object)new { servers });
+        });
 
         return api;
     }

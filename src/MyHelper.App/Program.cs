@@ -7,6 +7,8 @@ using MyHelper.Core.Models;
 using MyHelper.Core.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.AddServiceDefaults();
 var config = builder.Configuration;
 
 // ── Services ───────────────────────────────────────────────────────────────
@@ -16,6 +18,8 @@ builder.Services.AddCoreServices(config);
 
 // ── Build ──────────────────────────────────────────────────────────────────
 var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 // Register tool implementations with the IToolRegistry
 app.Services.RegisterAllTools();

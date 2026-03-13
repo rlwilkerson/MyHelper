@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MyHelper.Core\MyHelper.Core.csproj" />
+    <ProjectReference Include="..\MyHelper.ServiceDefaults\MyHelper.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -4,4 +4,6 @@
     <Project Path="src/MyHelper.Core/MyHelper.Core.csproj" />
     <Project Path="src/MyHelper.Tools/MyHelper.Tools.csproj" />
   </Folder>
+  <Project Path="src/MyHelper.AppHost/MyHelper.AppHost.csproj" Id="d3e93e9f-b6a4-4d27-8b66-409873559485" />
+  <Project Path="src/MyHelper.ServiceDefaults/MyHelper.ServiceDefaults.csproj" />
 </Solution>

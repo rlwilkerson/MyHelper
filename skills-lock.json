@@ -5,6 +5,11 @@
       "source": "wshaddix/dotnet-skills",
       "sourceType": "github",
       "computedHash": "b13f7a590d6e4dbca7062e23c617fd0cc202d09ab0d02f0b2846a1aeea5b1d6f"
+    },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "516bd2154eb843a8240e43d5b285229129853114ad7075a5e141e1c08e408c84"
     }
   }
 }

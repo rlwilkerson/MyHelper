@@ -75,6 +75,30 @@ public sealed class ApiEndpointsIntegrationTests : IClassFixture<MyHelperWebAppl
         var count = list.GetProperty("count").GetInt32();
         Assert.Equal(0, count);
     }
+
+    [Fact]
+    public async Task ModelsEndpoint_ReturnsServiceUnavailable_WhenCopilotClientIsNotStarted()
+    {
+        var response = await _client.GetAsync("/api/models");
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("GitHub Copilot unavailable", body.GetProperty("title").GetString());
+        Assert.Contains("GitHub Copilot is unavailable", body.GetProperty("detail").GetString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task SessionCreate_ReturnsServiceUnavailable_WhenCopilotClientIsNotStarted()
+    {
+        var response = await _client.PostAsJsonAsync("/api/sessions", new { });
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("GitHub Copilot unavailable", body.GetProperty("title").GetString());
+        Assert.Contains("GitHub Copilot is unavailable", body.GetProperty("detail").GetString(), StringComparison.Ordinal);
+    }
 }
 
 public sealed class MyHelperWebApplicationFactory : WebApplicationFactory<Program>

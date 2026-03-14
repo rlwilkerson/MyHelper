@@ -27,22 +27,43 @@ public static class ApiEndpoints
     {
         var sessions = api.MapGroup("/sessions");
 
-        sessions.MapPost("/", async Task<Ok<object>> (CreateSessionDto dto, ISessionManager sessionManager, CancellationToken ct) =>
+        sessions.MapPost("/", async Task<Results<Ok<object>, ProblemHttpResult>> (CreateSessionDto dto, ISessionManager sessionManager, CancellationToken ct) =>
         {
-            var sessionId = await sessionManager.CreateSessionAsync(dto, ct);
-            return TypedResults.Ok((object)new { sessionId });
+            try
+            {
+                var sessionId = await sessionManager.CreateSessionAsync(dto, ct);
+                return TypedResults.Ok((object)new { sessionId });
+            }
+            catch (CopilotUnavailableException ex)
+            {
+                return CopilotUnavailable(ex);
+            }
         });
 
-        sessions.MapPost("/{id}/resume", async Task<Ok<object>> (string id, ISessionManager sessionManager, CancellationToken ct) =>
+        sessions.MapPost("/{id}/resume", async Task<Results<Ok<object>, ProblemHttpResult>> (string id, ISessionManager sessionManager, CancellationToken ct) =>
         {
-            var sessionId = await sessionManager.ResumeSessionAsync(id, ct);
-            return TypedResults.Ok((object)new { sessionId });
+            try
+            {
+                var sessionId = await sessionManager.ResumeSessionAsync(id, ct);
+                return TypedResults.Ok((object)new { sessionId });
+            }
+            catch (CopilotUnavailableException ex)
+            {
+                return CopilotUnavailable(ex);
+            }
         });
 
-        sessions.MapDelete("/{id}", async Task<NoContent> (string id, ISessionManager sessionManager, CancellationToken ct) =>
+        sessions.MapDelete("/{id}", async Task<Results<NoContent, ProblemHttpResult>> (string id, ISessionManager sessionManager, CancellationToken ct) =>
         {
-            await sessionManager.DeleteSessionAsync(id, ct);
-            return TypedResults.NoContent();
+            try
+            {
+                await sessionManager.DeleteSessionAsync(id, ct);
+                return TypedResults.NoContent();
+            }
+            catch (CopilotUnavailableException ex)
+            {
+                return CopilotUnavailable(ex);
+            }
         });
 
         sessions.MapGet("/", Ok<object> (ISessionManager sessionManager) =>
@@ -53,11 +74,18 @@ public static class ApiEndpoints
 
     private static RouteGroupBuilder MapModelEndpoints(this RouteGroupBuilder api)
     {
-        api.MapGet("/models", async Task<Ok<object>> (CopilotClientService copilot, CancellationToken ct) =>
+        api.MapGet("/models", async Task<Results<Ok<object>, ProblemHttpResult>> (CopilotClientService copilot, CancellationToken ct) =>
         {
-            var modelList = await copilot.Client.ListModelsAsync(ct);
-            var models = modelList.Select(m => new { m.Id, m.Name }).ToArray();
-            return TypedResults.Ok((object)new { models });
+            try
+            {
+                var modelList = await copilot.Client.ListModelsAsync(ct);
+                var models = modelList.Select(m => new { m.Id, m.Name }).ToArray();
+                return TypedResults.Ok((object)new { models });
+            }
+            catch (CopilotUnavailableException ex)
+            {
+                return CopilotUnavailable(ex);
+            }
         });
 
         return api;
@@ -195,4 +223,10 @@ public static class ApiEndpoints
 
         return api;
     }
+
+    private static ProblemHttpResult CopilotUnavailable(CopilotUnavailableException ex) =>
+        TypedResults.Problem(
+            title: "GitHub Copilot unavailable",
+            detail: ex.Message,
+            statusCode: StatusCodes.Status503ServiceUnavailable);
 }
